@@ -85,3 +85,9 @@ PowerShell_files/
 # =========================
 .DS_Store
 Thumbs.db
+# Allow demo output files
+!demo_outputs/
+!demo_outputs/*.jpg
+!demo_outputs/*.jpeg
+!demo_outputs/*.png
+!demo_outputs/*.mp4
