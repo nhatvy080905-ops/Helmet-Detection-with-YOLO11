@@ -1,0 +1,87 @@
+# =========================
+# Python cache
+# =========================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+
+# =========================
+# Virtual environment
+# =========================
+venv/
+env/
+.venv/
+
+
+# =========================
+# VS Code
+# =========================
+.vscode/
+
+
+# =========================
+# YOLO model weights
+# Không đưa file model nặng lên GitHub
+# =========================
+*.pt
+*.onnx
+*.engine
+
+
+# =========================
+# YOLO training results
+# =========================
+runs/
+
+
+# =========================
+# Uploads / Results folders
+# =========================
+uploads/
+results/
+
+
+# =========================
+# Dataset folders
+# =========================
+Data_new/
+Rider.v1i.yolov8/
+Rider-1/
+Helmet detection.v1i.yolov8/
+Helmet - No helmet detection.v1i.yolov8/
+Bike Helmet Detection.v1-bboxblur-resized.yolov8/
+helmet-detection.v18i.yolov8/
+helmet.v1i.yolov8/
+Pokemon.v1i.folder/
+archive1/
+
+
+# =========================
+# Dataset zip files
+# =========================
+*.zip
+
+
+# =========================
+# Video files
+# =========================
+*.mp4
+*.avi
+*.mov
+*.mkv
+
+
+# =========================
+# PowerShell exported files
+# =========================
+PowerShell.html
+PowerShell_files/
+
+
+# =========================
+# System files
+# =========================
+.DS_Store
+Thumbs.db

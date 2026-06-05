@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HelmetAI Webcam</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: Inter, Arial, sans-serif;
+            background: #10121a;
+            color: #f3f5fb;
+        }
+
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 14px 32px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            background: rgba(16,18,26,0.92);
+            backdrop-filter: blur(16px);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.05rem;
+            font-weight: 800;
+        }
+
+        .brand svg {
+            width: 28px;
+            height: 28px;
+            color: #30c7b5;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 32px;
+            padding: 0 12px;
+            border: 1px solid rgba(48,199,181,0.35);
+            border-radius: 999px;
+            color: #b7fff5;
+            background: rgba(48,199,181,0.12);
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #30c7b5;
+            box-shadow: 0 0 16px rgba(48,199,181,0.75);
+        }
+
+        .page {
+            width: min(1160px, calc(100% - 40px));
+            margin: 0 auto;
+            padding: 34px 0 56px;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 340px minmax(0, 1fr);
+            gap: 20px;
+            align-items: start;
+        }
+
+        .panel {
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 8px;
+            background: #171a24;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.22);
+        }
+
+        .control-panel {
+            padding: 22px;
+        }
+
+        .panel-title {
+            margin-bottom: 6px;
+            font-size: 1.15rem;
+            font-weight: 800;
+        }
+
+        .panel-subtitle {
+            margin-bottom: 22px;
+            color: #98a2b8;
+            font-size: 0.9rem;
+            line-height: 1.45;
+        }
+
+        .field {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #dce3f2;
+            font-size: 0.86rem;
+            font-weight: 700;
+        }
+
+        input,
+        select {
+            width: 100%;
+            min-height: 42px;
+            padding: 0 12px;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 8px;
+            outline: none;
+            background: #0f1118;
+            color: #fff;
+            font: inherit;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #30c7b5;
+            box-shadow: 0 0 0 3px rgba(48,199,181,0.14);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 44px;
+            padding: 0 16px;
+            border: 0;
+            border-radius: 8px;
+            color: #06110f;
+            background: #30c7b5;
+            font-weight: 800;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .button svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .button.secondary {
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #f3f5fb;
+            background: #202432;
+        }
+
+        .button:hover {
+            filter: brightness(1.05);
+        }
+
+        .source-help {
+            margin-top: 18px;
+            padding: 14px;
+            border-radius: 8px;
+            background: #10131c;
+            color: #aab4c8;
+            font-size: 0.82rem;
+            line-height: 1.5;
+        }
+
+        .source-help code {
+            color: #d8fff9;
+            font-family: Consolas, Monaco, monospace;
+        }
+
+        .viewer-panel {
+            min-height: 520px;
+            overflow: hidden;
+        }
+
+        .viewer-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 16px 18px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .viewer-title {
+            font-size: 1rem;
+            font-weight: 800;
+        }
+
+        .viewer-source {
+            max-width: 420px;
+            overflow: hidden;
+            color: #98a2b8;
+            font-size: 0.82rem;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .stream {
+            display: grid;
+            min-height: 468px;
+            place-items: center;
+            background: #080a0f;
+        }
+
+        .stream img {
+            width: 100%;
+            height: 100%;
+            max-height: calc(100vh - 180px);
+            object-fit: contain;
+            display: block;
+        }
+
+        .empty-state {
+            display: grid;
+            gap: 14px;
+            place-items: center;
+            padding: 40px;
+            color: #8d97ab;
+            text-align: center;
+        }
+
+        .empty-state svg {
+            width: 52px;
+            height: 52px;
+            color: #30c7b5;
+        }
+
+        @media (max-width: 860px) {
+            .navbar {
+                padding: 12px 20px;
+            }
+
+            .page {
+                width: min(100% - 24px, 720px);
+                padding-top: 20px;
+            }
+
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .viewer-panel {
+                min-height: 360px;
+            }
+
+            .stream {
+                min-height: 320px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="brand">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3C7 3 3 6.2 3 10.2c0 2.3 1.2 4.4 3.2 5.7V20h11.6v-4.1c2-1.3 3.2-3.4 3.2-5.7C21 6.2 17 3 12 3z"/>
+                <path d="M7 13h10"/>
+            </svg>
+            HelmetAI Webcam
+        </div>
+        <div class="status-pill">
+            <span class="status-dot"></span>
+            Realtime
+        </div>
+    </nav>
+
+    <main class="page">
+        <div class="layout">
+            <section class="panel control-panel">
+                <h1 class="panel-title">Nguon camera</h1>
+                <p class="panel-subtitle">Chon webcam laptop, camera USB, RTSP camera, hoac file video de test truc tiep.</p>
+
+                <form action="{{ url_for('index') }}" method="GET">
+                    <input type="hidden" name="start" value="1">
+
+                    <div class="field">
+                        <label for="source">Camera source</label>
+                        <input
+                            id="source"
+                            name="source"
+                            value="{{ source }}"
+                            placeholder="0, 1, rtsp://..., D:\video.mp4"
+                        >
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="field">
+                            <label for="width">Width</label>
+                            <input id="width" name="width" type="number" min="320" step="1" value="{{ width }}">
+                        </div>
+
+                        <div class="field">
+                            <label for="height">Height</label>
+                            <input id="height" name="height" type="number" min="240" step="1" value="{{ height }}">
+                        </div>
+                    </div>
+
+                    <div class="actions">
+                        <button class="button" type="submit">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="5 3 19 12 5 21 5 3"/>
+                            </svg>
+                            Mo camera
+                        </button>
+
+                        <a class="button secondary" href="{{ url_for('index') }}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="6" y="6" width="12" height="12"/>
+                            </svg>
+                            Dung
+                        </a>
+                    </div>
+                </form>
+
+                <div class="source-help">
+                    Webcam laptop: <code>0</code><br>
+                    Camera USB: <code>1</code> hoac <code>2</code><br>
+                    RTSP: <code>rtsp://user:pass@ip:554/...</code><br>
+                    Video: <code>D:\Projetc_Helmet\Folder_video\test.mp4</code>
+                </div>
+            </section>
+
+            <section class="panel viewer-panel">
+                <div class="viewer-top">
+                    <div>
+                        <div class="viewer-title">Nhan dien mu bao hiem</div>
+                        <div class="viewer-source">{{ source }}</div>
+                    </div>
+                    <div class="status-pill">
+                        <span class="status-dot"></span>
+                        {% if start %}Dang chay{% else %}San sang{% endif %}
+                    </div>
+                </div>
+
+                <div class="stream">
+                    {% if start %}
+                    <img src="{{ stream_url }}" alt="Helmet detection realtime stream">
+                    {% else %}
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M15 10l4.5-2.5A1 1 0 0121 8.4v7.2a1 1 0 01-1.5.9L15 14"/>
+                            <rect x="3" y="6" width="12" height="12" rx="2"/>
+                        </svg>
+                        <div>Nhap nguon camera roi bam Mo camera.</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+    </main>
+</body>
+</html>

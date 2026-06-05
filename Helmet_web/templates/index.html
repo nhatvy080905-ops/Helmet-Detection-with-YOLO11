@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Helmet Detection - Nhận diện mũ bảo hiểm</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f0c29, #1a1a3e, #24243e);
+            color: #e0e0e0;
+            overflow-x: hidden;
+        }
+
+        .bg-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.3;
+            z-index: 0;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .bg-orb:nth-child(1) {
+            width: 400px;
+            height: 400px;
+            background: #6c63ff;
+            top: -100px;
+            left: -100px;
+        }
+
+        .bg-orb:nth-child(2) {
+            width: 350px;
+            height: 350px;
+            background: #00d2ff;
+            bottom: -80px;
+            right: -80px;
+            animation-delay: -3s;
+        }
+
+        .bg-orb:nth-child(3) {
+            width: 250px;
+            height: 250px;
+            background: #ff6b6b;
+            top: 50%;
+            left: 60%;
+            animation-delay: -5s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-30px) scale(1.05); }
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 16px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(15, 12, 41, 0.7);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #6c63ff, #00d2ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo svg {
+            width: 28px;
+            height: 28px;
+        }
+
+        .nav-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            background: rgba(108,99,255,0.15);
+            color: #6c63ff;
+            border: 1px solid rgba(108,99,255,0.3);
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 100px 24px 60px;
+        }
+
+        .hero-title {
+            text-align: center;
+            margin-bottom: 8px;
+            font-size: 2.4rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff, #a0a0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-sub {
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 1rem;
+            color: #8888aa;
+            font-weight: 400;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            backdrop-filter: blur(24px);
+            padding: 40px;
+            transition: border-color 0.3s;
+        }
+
+        .card:hover {
+            border-color: rgba(108,99,255,0.3);
+        }
+
+        .upload-zone {
+            border: 2px dashed rgba(108,99,255,0.3);
+            border-radius: 16px;
+            padding: 50px 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .upload-zone:hover,
+        .upload-zone.drag-over {
+            border-color: #6c63ff;
+            background: rgba(108,99,255,0.06);
+            transform: translateY(-2px);
+        }
+
+        .upload-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 16px;
+            background: linear-gradient(135deg, rgba(108,99,255,0.2), rgba(0,210,255,0.2));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .upload-icon svg {
+            width: 28px;
+            height: 28px;
+            stroke: #6c63ff;
+        }
+
+        .upload-text {
+            font-size: 1rem;
+            color: #aaa;
+            margin-bottom: 6px;
+        }
+
+        .upload-text span {
+            color: #6c63ff;
+            font-weight: 600;
+            text-decoration: underline;
+        }
+
+        .upload-hint {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .upload-zone input {
+            display: none;
+        }
+
+        .file-preview {
+            display: none;
+            align-items: center;
+            gap: 14px;
+            margin-top: 20px;
+            padding: 14px 18px;
+            background: rgba(108,99,255,0.08);
+            border: 1px solid rgba(108,99,255,0.2);
+            border-radius: 12px;
+        }
+
+        .file-preview.active {
+            display: flex;
+        }
+
+        .file-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: rgba(108,99,255,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .file-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #ddd;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-size {
+            font-size: 0.75rem;
+            color: #888;
+        }
+
+        .file-remove {
+            background: none;
+            border: none;
+            color: #ff6b6b;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 4px;
+        }
+
+        .btn-detect {
+            display: block;
+            width: 100%;
+            margin-top: 24px;
+            padding: 16px;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #6c63ff, #4834d4);
+            box-shadow: 0 4px 24px rgba(108,99,255,0.3);
+            transition: all 0.3s;
+        }
+
+        .btn-detect:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(108,99,255,0.4);
+        }
+
+        .btn-detect:active {
+            transform: translateY(0);
+        }
+
+        .btn-detect:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15,12,41,0.85);
+            backdrop-filter: blur(8px);
+            z-index: 200;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(108,99,255,0.2);
+            border-top-color: #6c63ff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 16px;
+            color: #aaa;
+            font-size: 0.95rem;
+        }
+
+        .result-section {
+            margin-top: 36px;
+            animation: fadeUp 0.6s ease;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .result-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #00e676;
+            box-shadow: 0 0 12px rgba(0,230,118,0.4);
+        }
+
+        .result-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .result-media {
+            width: 100%;
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(0,0,0,0.3);
+        }
+
+        .result-media img,
+        .result-media video {
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 14px;
+        }
+
+        .open-result {
+            margin-top: 12px;
+            text-align: center;
+        }
+
+        .open-result a {
+            color: #00d2ff;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .open-result a:hover {
+            text-decoration: underline;
+        }
+
+        .webcam-section {
+            margin-top: 32px;
+            padding-top: 28px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .webcam-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+
+        .webcam-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            padding: 0 18px;
+            border-radius: 12px;
+            border: 1px solid rgba(108,99,255,0.35);
+            background: rgba(108,99,255,0.18);
+            color: #fff;
+            font-size: 0.92rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .webcam-button:hover {
+            transform: translateY(-2px);
+            border-color: rgba(0,210,255,0.5);
+            background: rgba(0,210,255,0.14);
+        }
+
+        .webcam-button.secondary {
+            background: rgba(255,107,107,0.12);
+            border-color: rgba(255,107,107,0.35);
+        }
+
+        .webcam-note {
+            margin-bottom: 16px;
+            color: #8888aa;
+            font-size: 0.85rem;
+        }
+
+        .webcam-media {
+            aspect-ratio: 4 / 3;
+        }
+
+        .webcam-media img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 48px;
+            padding: 20px;
+            font-size: 0.8rem;
+            color: #555;
+        }
+
+        @media (max-width: 600px) {
+            .hero-title { font-size: 1.6rem; }
+            .card { padding: 24px; }
+            .upload-zone { padding: 32px 16px; }
+            .navbar { padding: 12px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-orb"></div>
+    <div class="bg-orb"></div>
+    <div class="bg-orb"></div>
+
+    <nav class="navbar">
+        <div class="logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="-webkit-text-fill-color:initial">
+                <path d="M12 2C6.48 2 2 6 2 10c0 2.5 1.5 5 4 6.5V20a1 1 0 001 1h10a1 1 0 001-1v-3.5c2.5-1.5 4-4 4-6.5 0-4-4.48-8-10-8z"/>
+            </svg>
+            HelmetAI
+        </div>
+        <div class="nav-badge">YOLOv8 Powered</div>
+    </nav>
+
+    <div class="container">
+        <h1 class="hero-title">Nhận diện mũ bảo hiểm</h1>
+        <p class="hero-sub">Tải lên hình ảnh hoặc video để nhận diện người đội mũ bảo hiểm bằng AI</p>
+
+        <div class="card">
+            <form id="detectForm" action="/detect" method="POST" enctype="multipart/form-data">
+
+                <div class="upload-zone" id="uploadZone">
+                    <div class="upload-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                    </div>
+                    <p class="upload-text">Kéo thả file vào đây hoặc <span>chọn file</span></p>
+                    <p class="upload-hint">Hỗ trợ: JPG, JPEG, PNG, MP4, AVI, MOV</p>
+                    <input type="file" name="file" id="fileInput" accept=".jpg,.jpeg,.png,.mp4,.avi,.mov,image/*,video/*" required>
+                </div>
+
+                <div class="file-preview" id="filePreview">
+                    <div class="file-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6c63ff" stroke-width="2">
+                            <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/>
+                            <polyline points="13 2 13 9 20 9"/>
+                        </svg>
+                    </div>
+                    <div class="file-info">
+                        <div class="file-name" id="fileName"></div>
+                        <div class="file-size" id="fileSize"></div>
+                    </div>
+                    <button type="button" class="file-remove" id="fileRemove">&times;</button>
+                </div>
+
+                <button type="submit" class="btn-detect" id="btnDetect" disabled>
+                    🔍 Nhận diện ngay
+                </button>
+            </form>
+
+            <div class="webcam-section">
+                <div class="result-header">
+                    <div class="result-dot"></div>
+                    <div class="result-title">Webcam realtime</div>
+                </div>
+
+                <p class="webcam-note">Dung webcam laptop, camera USB, hoac RTSP camera qua bien CAMERA_SOURCE.</p>
+
+                <div class="webcam-actions">
+                    <a class="webcam-button" href="{{ url_for('webcam') }}">Mo webcam</a>
+
+                    {% if show_webcam %}
+                    <a class="webcam-button secondary" href="{{ url_for('index') }}">Dung webcam</a>
+                    {% endif %}
+                </div>
+
+                {% if show_webcam %}
+                <div class="result-media webcam-media">
+                    <img
+                        src="{{ url_for('video_feed') }}"
+                        alt="Helmet detection webcam realtime"
+                    >
+                </div>
+                {% endif %}
+            </div>
+
+            {% if result_file %}
+            <div class="result-section">
+                <div class="result-header">
+                    <div class="result-dot"></div>
+                    <div class="result-title">Kết quả nhận diện</div>
+                </div>
+
+                <div class="result-media">
+                    {% if file_type == "image" %}
+                    <img
+                        src="{{ url_for('result_file', filename=result_file) }}?v={{ range(1, 9999999) | random }}"
+                        alt="Kết quả nhận diện"
+                    >
+                    {% elif file_type == "video" %}
+                    <video
+                        controls
+                        preload="metadata"
+                        playsinline
+                    >
+                        <source
+                            src="{{ url_for('result_file', filename=result_file) }}?v={{ range(1, 9999999) | random }}"
+                            type="video/mp4"
+                        >
+                        Trình duyệt của bạn không hỗ trợ thẻ video.
+                    </video>
+                    {% endif %}
+                </div>
+
+                <div class="open-result">
+                    <a
+                        href="{{ url_for('result_file', filename=result_file) }}?v={{ range(1, 9999999) | random }}"
+                        target="_blank"
+                    >
+                        Mở file kết quả trong tab mới
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="footer">© 2026 HelmetAI — Hệ thống nhận diện mũ bảo hiểm thông minh</div>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Đang xử lý nhận diện...</div>
+    </div>
+
+    <script>
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const filePreview = document.getElementById('filePreview');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const fileRemove = document.getElementById('fileRemove');
+        const btnDetect = document.getElementById('btnDetect');
+        const form = document.getElementById('detectForm');
+        const loading = document.getElementById('loadingOverlay');
+
+        uploadZone.addEventListener('click', () => fileInput.click());
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadZone.addEventListener(eventName, event => {
+                event.preventDefault();
+                uploadZone.classList.add('drag-over');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadZone.addEventListener(eventName, event => {
+                event.preventDefault();
+                uploadZone.classList.remove('drag-over');
+            });
+        });
+
+        uploadZone.addEventListener('drop', event => {
+            const files = event.dataTransfer.files;
+
+            if (files.length > 0) {
+                fileInput.files = files;
+                showFile(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                showFile(fileInput.files[0]);
+            }
+        });
+
+        function showFile(file) {
+            const allowedExtensions = ['jpg', 'jpeg', 'png', 'mp4', 'avi', 'mov'];
+            const extension = file.name.split('.').pop().toLowerCase();
+
+            if (!allowedExtensions.includes(extension)) {
+                alert('File không hợp lệ. Vui lòng chọn JPG, JPEG, PNG, MP4, AVI hoặc MOV.');
+                fileInput.value = '';
+                filePreview.classList.remove('active');
+                btnDetect.disabled = true;
+                return;
+            }
+
+            fileName.textContent = file.name;
+
+            const mb = (file.size / 1024 / 1024).toFixed(2);
+            fileSize.textContent = mb + ' MB';
+
+            filePreview.classList.add('active');
+            btnDetect.disabled = false;
+        }
+
+        fileRemove.addEventListener('click', () => {
+            fileInput.value = '';
+            filePreview.classList.remove('active');
+            btnDetect.disabled = true;
+        });
+
+        form.addEventListener('submit', event => {
+            if (!fileInput.files.length) {
+                event.preventDefault();
+                alert('Vui lòng chọn file trước khi nhận diện.');
+                return;
+            }
+
+            loading.classList.add('active');
+            btnDetect.disabled = true;
+        });
+    </script>
+</body>
+</html>
